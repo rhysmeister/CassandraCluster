@@ -1,6 +1,6 @@
 ---
   - hosts: cnode*
-    gather_facts: no
+    gather_facts: yes
     become: yes
     tasks:
 
@@ -8,6 +8,21 @@
         debug:
           msg: "Anisble debug task is excuted!"
           verbosity: 1
+
+      - name: Set FQDN
+        lineinfile:
+          dest: /etc/hostname
+          regexp: "^{{ ansible_nodename }}*"
+          line: "{{ ansible_nodename }}.local"
+
+      - name: Restart network
+        service:
+          name: network
+          state: restarted
+
+      - name: Get IP Address
+        shell: "ip --4 address show eth1 | grep inet | awk '{ print $2; }' | cut -d '/' -f 1"
+        register: ip_address
 
       - name: Add Cassandra Repository
         yum_repository:
@@ -20,6 +35,38 @@
 
       - name: Install Cassandra & Tools
         yum:
-          name: cassandra cassandra-tools python2-cassandra-driver
+          name: [ "cassandra", "cassandra-tools", "python2-cassandra-driver" ]
           state: present
           update_cache: yes
+
+      - name: Set Cassandra Cluster name
+        lineinfile:
+          dest: /etc/cassandra/conf/cassandra.yaml
+          regexp: '^cluster_name:'
+          line: "cluster_name: 'cassandra_cluster'"
+
+      - name: Set Cassandra Seeds
+        lineinfile:
+          dest: /etc/cassandra/conf/cassandra.yaml
+          regexp: '- seeds:'
+          line: "        - seeds: \"192.168.44.101,192.168.44.102,192.168.44.103\""
+
+      - name: Set Cassandra Listen Address
+        lineinfile:
+          dest: /etc/cassandra/conf/cassandra.yaml
+          regexp: '^listen_address:'
+          line: "listen_address: {{ ip_address.stdout }}"
+
+      - name: Set Cassandra RPC Address
+        lineinfile:
+          dest: /etc/cassandra/conf/cassandra.yaml
+          regexp: '^rpc_address:'
+          line: "rpc_address: {{ ip_address.stdout }}"
+
+      - name: Enable Cassandra service
+        command: chkconfig cassandra on
+
+      - name: Start Cassandra Service
+        service:
+          name: cassandra
+          state: started
