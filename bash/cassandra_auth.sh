@@ -21,7 +21,7 @@ if [[ "$?" -eq 0 ]]; then
   CQL="CREATE ROLE $CASSANDRA_ADMIN_USER WITH PASSWORD = '$CASSANDRA_ADMIN_USER_PWD' AND SUPERUSER = true AND LOGIN = true";
   cqlsh -u cassandra -p cassandra -e "$CQL" && echo "A new Cassandra administrator was created: $CASSANDRA_ADMIN_USER.";
   CQL="ALTER ROLE cassandra WITH PASSWORD = 'sdf345fsdfsrt3reyadsduvfds632gebhsafaseryuusihfsutdfuw' AND SUPERUSER=false";
-  cqlsh -u $CASSANDRA_ADMIN_USER -p $CASSANDRA_ADMIN_USER_PWD -e "$CQL" && "The default Cassandra admin user was modified."
+  cqlsh -u $CASSANDRA_ADMIN_USER -p $CASSANDRA_ADMIN_USER_PWD -e "$CQL" && echo "The default Cassandra admin user was modified."
   if [[ "$?" -eq 0 ]]; then
       touch ansible_cassandra_new_admin_user.txt;
   fi;
