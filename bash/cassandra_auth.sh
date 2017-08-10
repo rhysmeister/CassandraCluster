@@ -4,6 +4,8 @@ set -u;
 CASSANDRA_ADMIN_USER="$1";
 CASSANDRA_ADMIN_USER_PWD="$2";
 
+export CQLSH_HOST="192.168.44.101";
+
 # Test if anonymous access is possible and config auth space if so
 cqlsh -e "DESCRIBE KEYSPACES";
 if [[ "$?" -eq 0 ]]; then # Anonymous auth is possible
