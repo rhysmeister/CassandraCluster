@@ -2,6 +2,10 @@
   - hosts: cnode*
     gather_facts: yes
     become: yes
+    vars:
+      cassandra_admin_user: "admin"
+      cassandra_admin_user_pwd: "BigSecret"
+
     tasks:
 
       - name: Output a debug message
@@ -14,11 +18,14 @@
           dest: /etc/hostname
           regexp: "^{{ ansible_nodename }}*"
           line: "{{ ansible_nodename }}.local"
+        register: fqdn_set
+        when: '"local" not in "{{ ansible_hostname }}"'
 
       - name: Restart network
         service:
           name: network
           state: restarted
+        when: fqdn_set.changed
 
       - name: Get IP Address
         shell: "ip --4 address show eth1 | grep inet | awk '{ print $2; }' | cut -d '/' -f 1"
@@ -70,3 +77,15 @@
         service:
           name: cassandra
           state: started
+
+      - name: Set Cassandra authenticator
+        lineinfile:
+          dest: /etc/cassandra/conf/cassandra.yaml
+          regexp: '^authenticator:'
+          line: 'authenticator: PasswordAuthenticator'
+
+      - name: Run Casandra Authentication Setup Script
+        script: bash/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}
+        args:
+            creates: ansible_cassandra_admin_user_ran_here.txt
+        when: ansible_hostname == 'cnode1'
