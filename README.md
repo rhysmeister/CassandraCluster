@@ -14,9 +14,11 @@ Requirements
 Getting Started
 ================
 
+```
 git clone https://github.com/rhysmeister/CassandraCluster.git
 cd CassandraCluster
 vagrant up
+```
 
 Access the Cassandra Cluster Nodes
 ==================================
