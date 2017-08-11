@@ -6,10 +6,10 @@ By default a 5-Node Cassandra Cluster will be created each with 1GB of RAM and 1
 Requirements
 =============
 
-vagrant 1.9.0
-virtualbox 5.0.26 r108824
-ansible 2.2.0.0
-git version 2.11.0
+* vagrant 1.9.0
+* virtualbox 5.0.26 r108824
+* ansible 2.2.0.0
+* git version 2.11.0
 
 Getting Started
 ================
