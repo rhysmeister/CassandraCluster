@@ -68,3 +68,8 @@ cassandra_admin_user_pwd
 ```
 
 Change these before setting up the cluster.
+
+Cassandra Configuration
+=======================
+
+TODO: Notes about the configuration of the Cassandra Cluster.
