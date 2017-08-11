@@ -84,8 +84,16 @@
           regexp: '^authenticator:'
           line: 'authenticator: PasswordAuthenticator'
 
-      - name: Run Casandra Authentication Setup Script
-        script: bash/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}
-        args:
-            creates: ansible_cassandra_admin_user_ran_here.txt
+      - name: Copy Cassandra Authentication Script to host
+        copy: src="bash/cassandra_auth.sh" dest="/home/vagrant" mode=0100
         when: ansible_hostname == 'cnode1'
+
+      - name: Execute Cassandra Authentication Script on the hosts
+        command: "/home/vagrant/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}"
+        when: ansible_hostname == 'cnode1'
+
+#      - name: Run Casandra Authentication Setup Script
+#        script: bash/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}
+#        args:
+#            creates: ansible_cassandra_admin_user_ran_here.txt
+#        when: ansible_hostname == 'cnode1'
