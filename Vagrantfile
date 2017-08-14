@@ -18,7 +18,7 @@ Vagrant.configure("2") do |config|
             cnode.vm.provision :ansible do |ansible|
             ansible.limit = "all" # Connect to all machines
             ansible.playbook = "cassandra.yml"
-            ansible.inventory_path = ".vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
+            #ansible.inventory_path = ".vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
         end
     end
    end
