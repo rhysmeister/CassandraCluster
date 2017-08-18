@@ -48,6 +48,13 @@
           sysctl_set: yes
           reload: yes
 
+      - name: Ensure max_map_count is 131072
+        sysctl:
+          name: vm.max_map_count
+          value: 131072
+          sysctl_set: yes
+          reload: yes
+
       - name: Install ntp
         yum:
           name: ["ntp", "ntpdate", "ntp-doc"]
@@ -116,12 +123,10 @@
           regexp: '^rpc_address:'
           line: "rpc_address: {{ ip_address.stdout }}"
 
-      - name: Enable Cassandra service
-        command: chkconfig cassandra on
-
       - name: Start Cassandra Service
         service:
           name: cassandra
+          enabled: yes
           state: started
 
       - name: Set Cassandra authenticator
