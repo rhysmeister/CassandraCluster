@@ -141,6 +141,7 @@
 
       - name: Execute Cassandra Authentication Script on the hosts
         command: "/home/vagrant/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}"
+        creates: /home/vagrant/ansible_cassandra_admin_user_ran_here.txt
         when: ansible_hostname == 'cnode1'
 
 #      - name: Run Casandra Authentication Setup Script
