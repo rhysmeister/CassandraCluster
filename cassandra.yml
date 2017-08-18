@@ -64,7 +64,7 @@
           path: /etc/security/limits.conf
           regexp: "^{{ item }}"
           line: "{{ item }}"
-        with_items: limits
+        with_items: "{{ limits }}"
 
       - name: Extra Limit for RH Derived Distros
         lineinfile:
