@@ -6,11 +6,10 @@
       cassandra_admin_user: "admin"
       cassandra_admin_user_pwd: "BigSecret"
       limits: [
-        "root soft memlock unlimited",
-        "root hard memlock unlimited",
-        "root – nofile 100000",
-        "root – nproc 32768",
-        "root – as unlimited" ]
+        "cassandra - memlock unlimited",
+        "cassandra - nofile 100000",
+        "cassandra - nproc 32768",
+        "cassandra - as unlimited" ]
 
     tasks:
 
@@ -51,7 +50,7 @@
       - name: Ensure max_map_count is 131072
         sysctl:
           name: vm.max_map_count
-          value: 131072
+          value: 1048575
           sysctl_set: yes
           reload: yes
 
@@ -71,13 +70,14 @@
           path: /etc/security/limits.conf
           regexp: "^{{ item }}"
           line: "{{ item }}"
+          state: absent
         with_items: "{{ limits }}"
 
       - name: Extra Limit for RH Derived Distros
         lineinfile:
           path: /etc/security/limits.d/90-nproc.conf
-          regexp: "^\\* – nproc 32768"
-          line: "* – nproc 32768"
+          regexp: "^\\* - nproc 32768"
+          line: "* - nproc 32768"
           create: yes
 
       - name: Get IP Address
