@@ -24,7 +24,7 @@
           regexp: "^{{ ansible_nodename }}*"
           line: "{{ ansible_nodename }}.local"
         register: fqdn_set
-        when: '"local" not in "{{ ansible_hostname }}"'
+        when: '"local" not in ansible_hostname'
 
       - name: Restart network
         service:
