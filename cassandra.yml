@@ -26,6 +26,12 @@
         register: fqdn_set
         when: '"local" not in ansible_hostname'
 
+      - name: Set hosts file entry
+        lineinfile:
+          dest: /etc/hosts
+          regexp: "{{ ansible_eth1.ipv4.address }} {{ ansible_hostname }} {{ ansible_hostname }}"
+          line: "{{ ansible_eth1.ipv4.address }} {{ ansible_hostname }} {{ ansible_hostname }}"
+
       - name: Restart network
         service:
           name: network
@@ -87,11 +93,16 @@
       - name: Add Cassandra Repository
         yum_repository:
           name: Cassandra
-          description: Apache Cassandra Yum Repo
+          description: Cassandra
           baseurl: https://www.apache.org/dist/cassandra/redhat/311x/
           gpgcheck: 1
-          repo_gpgcheck: 1
           gpgkey: https://www.apache.org/dist/cassandra/KEYS
+          state: present
+
+      - name: yum-clean-metadata
+        command: yum clean metadata
+        args:
+          warn: no
 
       - name: Install Cassandra & Tools
         yum:
@@ -137,11 +148,18 @@
 
       - name: Copy Cassandra Authentication Script to host
         copy: src="bash/cassandra_auth.sh" dest="/home/vagrant" mode=0100
-        when: ansible_hostname == 'cnode1'
+        when: ansible_hostname == "cnode1"
+
+      - name: Copy
+        copy:
+          content: "CREATE ROLE {{ cassandra_admin_user }} WITH PASSWORD = '{{ cassandra_admin_user_pwd }}' AND SUPERUSER = true AND LOGIN = true;"
+          dest: "/home/vagrant/cassandra_admin_user.cql"
+      #- name:
 
       - name: Execute Cassandra Authentication Script on the hosts
         command: "/home/vagrant/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}"
-        creates: /home/vagrant/ansible_cassandra_admin_user_ran_here.txt
+        args:
+          creates: /home/vagrant/ansible_cassandra_admin_user_ran_here.txt
         when: ansible_hostname == 'cnode1'
 
 #      - name: Run Casandra Authentication Setup Script
