@@ -145,22 +145,70 @@
           dest: /etc/cassandra/conf/cassandra.yaml
           regexp: '^authenticator:'
           line: 'authenticator: PasswordAuthenticator'
+        register: authentication_enabled
 
-      - name: Copy Cassandra Authentication Script to host
-        copy: src="bash/cassandra_auth.sh" dest="/home/vagrant" mode=0100
+      - name: Check if anon access is enabled
+        command: cqlsh
+        environment:
+          CQLSH_HOST: "192.168.44.101"
+        register: anon_access_possible
         when: ansible_hostname == "cnode1"
+        failed_when: "'Remote end requires authentication' not in anon_access_possible.stderr"
 
-      - name: Copy
+      - name: Check is default admin account is enabled
+        command: cqlsh -u cassandra -p cassandra -e "DESCRIBE KEYSPACES"
+        environment:
+          CQLSH_HOST: "192.168.44.101"
+        register: default_admin_access_possible
+        when: ansible_hostname == "cnode1"
+        run_once: yes
+        ignore_errors: yes
+
+      - name: Output default_admin_access_possible variable
+        debug:
+          var: default_admin_access_possible
+        verbosity: 2
+
+      - name: Generate CQL file to create new admin user
         copy:
           content: "CREATE ROLE {{ cassandra_admin_user }} WITH PASSWORD = '{{ cassandra_admin_user_pwd }}' AND SUPERUSER = true AND LOGIN = true;"
           dest: "/home/vagrant/cassandra_admin_user.cql"
+        when: default_admin_access_possible.rc == 0 and ansible_hostname == "cnode1"
+
+      - name: Run admin create script if needed
+        command: cqlsh -u cassandra -p cassandra -f /home/vagrant/cassandra_admin_user.cql
+        environment:
+          CQLSH_HOST: "192.168.44.101"
+        register: admin_create
+        when: default_admin_access_possible.rc == 0 and ansible_hostname == "cnode1"
+        failed_when: admin_create.rc != 0 and 'admin already exists' not in admin_create.stderr
+
+      - name: Generate CQL file to modify default cassandra admin user
+        copy:
+          content: "ALTER ROLE cassandra WITH PASSWORD = 'sdf345fsdfsrt3reyadsduvfds632gebhsafaseryuusihfsutdfuw' AND SUPERUSER=false;"
+          dest: "/home/vagrant/cassandra_default_admin_user.cql"
+        when: default_admin_access_possible.rc == 0 and ansible_hostname == "cnode1"
+
+      - name: Run CQL script to modify default cassandra user
+        command: cqlsh -u {{ cassandra_admin_user }} -p '{{ cassandra_admin_user_pwd }}' -f /home/vagrant/cassandra_default_admin_user.cql
+        environment:
+          CQLSH_HOST: "192.168.44.101"
+        when: default_admin_access_possible.rc == 0 and ansible_hostname == "cnode1"
+
+      - name: Remove CQL files if needed
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items: ["/home/vagrant/cassandra_admin_user.cql", "/home/vagrant/cassandra_default_admin_user.cql"]
+        when: ansible_hostname == "cnode1"
+
       #- name:
 
-      - name: Execute Cassandra Authentication Script on the hosts
-        command: "/home/vagrant/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}"
-        args:
-          creates: /home/vagrant/ansible_cassandra_admin_user_ran_here.txt
-        when: ansible_hostname == 'cnode1'
+    #  - name: Execute Cassandra Authentication Script on the hosts
+    #    command: "/home/vagrant/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}"
+    #    args:
+    #      creates: /home/vagrant/ansible_cassandra_admin_user_ran_here.txt
+    #    when: ansible_hostname == 'cnode1'
 
 #      - name: Run Casandra Authentication Setup Script
 #        script: bash/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}
