@@ -8,3 +8,6 @@
     "cassandra - nproc 32768",
     "cassandra - as unlimited" ]
   cassandra_admin_node: "cnode1" # Where we perform Cassandra CLuster admin tasks
+  ntp_packages: ["ntp", "ntpdate", "ntp-doc"]
+  cassandra_packages: [ "cassandra", "cassandra-tools", "python2-cassandra-driver" ]
+  cassandra_seeds: "        - seeds: \"192.168.44.101,192.168.44.102,192.168.44.103\""

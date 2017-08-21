@@ -50,7 +50,7 @@
 
   - name: Install ntp
     yum:
-      name: ["ntp", "ntpdate", "ntp-doc"]
+      name: "{{ ntp_packages }}"
       state: present
 
   - name: Ensure ntp service starts
@@ -95,7 +95,7 @@
 
   - name: Install Cassandra & Tools
     yum:
-      name: [ "cassandra", "cassandra-tools", "python2-cassandra-driver" ]
+      name: "{{ cassandra_packages }}"
       state: present
       update_cache: yes
 
@@ -109,7 +109,7 @@
     lineinfile:
       dest: /etc/cassandra/conf/cassandra.yaml
       regexp: '- seeds:'
-      line: "        - seeds: \"192.168.44.101,192.168.44.102,192.168.44.103\""
+      line: "{{ cassandra_seeds }}"
 
   - name: Set Cassandra Listen Address
     lineinfile:
@@ -136,12 +136,9 @@
       enabled: yes
       state: started
 
-  - name: Pause Ansible execution a bit
+  - name: Pause Ansible execution
     pause:
       minutes: 1
-
-  - debug:
-      var: ansible_eth1.ipv4.address
 
   - name: Check if anon access is enabled
     command: cqlsh
@@ -192,6 +189,7 @@
 
   - debug:
       var: ansible_eth1.ipv4.address
+      verbosity: 2
 
   - name: Remove CQL files if needed
     file:
