@@ -73,9 +73,10 @@
       line: "* - nproc 32768"
       create: yes
 
-  - name: Get IP Address
-    shell: "ip --4 address show eth1 | grep inet | awk '{ print $2; }' | cut -d '/' -f 1"
-    register: ip_address
+  # Use ansible facts instead ansible_eth1.ipv4.address
+  #- name: Get IP Address
+  #  shell: "ip --4 address show eth1 | grep inet | awk '{ print $2; }' | cut -d '/' -f 1"
+  #  register: ip_address
 
   - name: Add Cassandra Repository
     yum_repository:
@@ -113,13 +114,13 @@
     lineinfile:
       dest: /etc/cassandra/conf/cassandra.yaml
       regexp: '^listen_address:'
-      line: "listen_address: {{ ip_address.stdout }}"
+      line: "listen_address: {{ ansible_eth1.ipv4.address }}"
 
   - name: Set Cassandra RPC Address
     lineinfile:
       dest: /etc/cassandra/conf/cassandra.yaml
       regexp: '^rpc_address:'
-      line: "rpc_address: {{ ip_address.stdout }}"
+      line: "rpc_address: {{ ansible_eth1.ipv4.address }}"
 
   - name: Set Cassandra authenticator
     lineinfile:
