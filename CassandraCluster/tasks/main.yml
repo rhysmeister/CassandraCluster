@@ -1,0 +1,207 @@
+---
+# tasks file for CassandraCluster
+  - name: Output a debug message
+    debug:
+      msg: "Anisble debug task is excuted!"
+      verbosity: 1
+
+  - name: Set FQDN
+    lineinfile:
+      dest: /etc/hostname
+      regexp: "^{{ ansible_nodename }}*"
+      line: "{{ ansible_nodename }}.local"
+    register: fqdn_set
+    when: '"local" not in ansible_hostname'
+
+  - name: Set hosts file entry
+    lineinfile:
+      dest: /etc/hosts
+      regexp: "{{ ansible_eth1.ipv4.address }} {{ ansible_hostname }} {{ ansible_hostname }}"
+      line: "{{ ansible_eth1.ipv4.address }} {{ ansible_hostname }} {{ ansible_hostname }}"
+
+  - name: Restart network
+    service:
+      name: network
+      state: restarted
+    when: fqdn_set.changed
+
+  - name: Disable Swap
+    command: swapoff -a
+
+  - name: Remove swap partitions
+    mount:
+      path: swap
+      state: absent
+
+  - name: Ensure Swappiness is 0
+    sysctl:
+      name: vm.swappiness
+      value: 0
+      sysctl_set: yes
+      reload: yes
+
+  - name: Ensure max_map_count is 131072
+    sysctl:
+      name: vm.max_map_count
+      value: 1048575
+      sysctl_set: yes
+      reload: yes
+
+  - name: Install ntp
+    yum:
+      name: ["ntp", "ntpdate", "ntp-doc"]
+      state: present
+
+  - name: Ensure ntp service starts
+    service:
+      name: ntpd
+      enabled: yes
+      state: started
+
+  - name: Ensure limits are set
+    lineinfile:
+      path: /etc/security/limits.conf
+      regexp: "^{{ item }}"
+      line: "{{ item }}"
+      state: absent
+    with_items: "{{ limits }}"
+
+  - name: Extra Limit for RH Derived Distros
+    lineinfile:
+      path: /etc/security/limits.d/90-nproc.conf
+      regexp: "^\\* - nproc 32768"
+      line: "* - nproc 32768"
+      create: yes
+
+  - name: Get IP Address
+    shell: "ip --4 address show eth1 | grep inet | awk '{ print $2; }' | cut -d '/' -f 1"
+    register: ip_address
+
+  - name: Add Cassandra Repository
+    yum_repository:
+      name: Cassandra
+      description: Cassandra
+      baseurl: https://www.apache.org/dist/cassandra/redhat/311x/
+      gpgcheck: 1
+      gpgkey: https://www.apache.org/dist/cassandra/KEYS
+      state: present
+
+  - name: yum-clean-metadata
+    command: yum clean metadata
+    args:
+      warn: no
+
+  - name: Install Cassandra & Tools
+    yum:
+      name: [ "cassandra", "cassandra-tools", "python2-cassandra-driver" ]
+      state: present
+      update_cache: yes
+
+  - name: Set Cassandra Cluster name
+    lineinfile:
+      dest: /etc/cassandra/conf/cassandra.yaml
+      regexp: '^cluster_name:'
+      line: "cluster_name: 'cassandra_cluster'"
+
+  - name: Set Cassandra Seeds
+    lineinfile:
+      dest: /etc/cassandra/conf/cassandra.yaml
+      regexp: '- seeds:'
+      line: "        - seeds: \"192.168.44.101,192.168.44.102,192.168.44.103\""
+
+  - name: Set Cassandra Listen Address
+    lineinfile:
+      dest: /etc/cassandra/conf/cassandra.yaml
+      regexp: '^listen_address:'
+      line: "listen_address: {{ ip_address.stdout }}"
+
+  - name: Set Cassandra RPC Address
+    lineinfile:
+      dest: /etc/cassandra/conf/cassandra.yaml
+      regexp: '^rpc_address:'
+      line: "rpc_address: {{ ip_address.stdout }}"
+
+  - name: Set Cassandra authenticator
+    lineinfile:
+      dest: /etc/cassandra/conf/cassandra.yaml
+      regexp: '^authenticator:'
+      line: 'authenticator: PasswordAuthenticator'
+    register: authentication_enabled
+
+  - name: Start Cassandra Service
+    service:
+      name: cassandra
+      enabled: yes
+      state: started
+
+  - name: Pause Ansible execution a bit
+    pause:
+      minutes: 1
+
+  - name: Check if anon access is enabled
+    command: cqlsh
+    environment:
+      CQLSH_HOST: "192.168.44.101"
+    when: ansible_hostname == "cnode1"
+    register: anon_access_possible
+    failed_when: "'Remote end requires authentication' not in anon_access_possible.stderr"
+
+  - name: Check if default admin account is enabled
+    command: cqlsh -u cassandra -p cassandra -e "DESCRIBE KEYSPACES"
+    environment:
+      CQLSH_HOST: "192.168.44.101"
+    when: ansible_hostname == "cnode1"
+    ignore_errors: yes
+    register: default_admin_access_possible
+
+  - name: Output default_admin_access_possible variable
+    debug:
+      var: default_admin_access_possible
+      verbosity: 2
+
+  - name: Generate CQL file to create new admin user
+    copy:
+      content: "CREATE ROLE {{ cassandra_admin_user }} WITH PASSWORD = '{{ cassandra_admin_user_pwd }}' AND SUPERUSER = true AND LOGIN = true;"
+      dest: "/home/vagrant/cassandra_admin_user.cql"
+    when: ansible_hostname == "cnode1" and default_admin_access_possible.rc == 0
+
+  - name: Run admin create script if needed
+    command: cqlsh -u cassandra -p cassandra -f /home/vagrant/cassandra_admin_user.cql
+    environment:
+      CQLSH_HOST: "192.168.44.101"
+    when: ansible_hostname == "cnode1" and default_admin_access_possible.rc == 0
+    failed_when: admin_create.rc != 0 and 'admin already exists' not in admin_create.stderr
+    register: admin_create
+
+  - name: Generate CQL file to modify default cassandra admin user
+    copy:
+      content: "ALTER ROLE cassandra WITH PASSWORD = 'sdf345fsdfsrt3reyadsduvfds632gebhsafaseryuusihfsutdfuw' AND SUPERUSER=false;"
+      dest: "/home/vagrant/cassandra_default_admin_user.cql"
+    when: ansible_hostname == "cnode1" and default_admin_access_possible.rc == 0
+
+  - name: Run CQL script to modify default cassandra user
+    command: cqlsh -u {{ cassandra_admin_user }} -p '{{ cassandra_admin_user_pwd }}' -f /home/vagrant/cassandra_default_admin_user.cql
+    environment:
+      CQLSH_HOST: "192.168.44.101"
+    when: ansible_hostname == "cnode1" and default_admin_access_possible.rc == 0
+
+  - name: Remove CQL files if needed
+    file:
+      path: "{{ item }}"
+      state: absent
+    with_items: ["/home/vagrant/cassandra_admin_user.cql", "/home/vagrant/cassandra_default_admin_user.cql"]
+    when: ansible_hostname == "cnode1"
+
+#- name:
+
+#  - name: Execute Cassandra Authentication Script on the hosts
+#    command: "/home/vagrant/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}"
+#    args:
+#      creates: /home/vagrant/ansible_cassandra_admin_user_ran_here.txt
+#    when: ansible_hostname == 'cnode1'
+
+#      - name: Run Casandra Authentication Setup Script
+#        script: bash/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}
+#        args:
+#            creates: ansible_cassandra_admin_user_ran_here.txt
+#        when: ansible_hostname == 'cnode1'
