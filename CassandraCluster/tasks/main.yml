@@ -27,6 +27,7 @@
 
   - name: Disable Swap
     command: swapoff -a
+    when: ansible_swaptotal_mb > 0
 
   - name: Remove swap partitions
     mount:
