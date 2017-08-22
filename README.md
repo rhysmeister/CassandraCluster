@@ -1,7 +1,7 @@
 # CassandraCluster
 A project using Vagrant and Ansible to create and deploy a Cassandra Cluster with VirtualBox.
 
-By default a 5-Node Cassandra Cluster will be created each with 1GB of RAM and 1 cpu.
+By default a 5-Node Cassandra Cluster will be created each with 2GB of RAM and 1 cpu.
 
 Requirements
 =============
