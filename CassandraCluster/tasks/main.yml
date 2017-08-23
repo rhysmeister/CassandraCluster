@@ -5,6 +5,61 @@
       msg: "Anisble debug task is excuted!"
       verbosity: 1
 
+  - name: Ensure OpenJDK is not installed
+    yum:
+      name: "java*openjdk*"
+      state: "absent"
+
+  #- name: Get Latest Oracle JDK
+  #  shell: "wget --no-cookies --no-check-certificate --header Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie {{ oracle_jdk_rpm_url }}"
+    #delegate_to: 127.0.0.1
+    #run_once: "yes"
+    #register: jdk_downloaded
+
+  - name: Check if Oracle JDK rpm has already been downloaded
+    stat:
+      path: "/tmp/{{ oracle_jdk_rpm_url | basename }}"
+    delegate_to: 127.0.0.1
+    run_once: "yes"
+    become: "no"
+    register: jdk_rpm
+
+  - name: Get Oracle JDK rpm
+    get_url:
+      url:     "{{ oracle_jdk_rpm_url }}"
+      headers: 'Cookie:oraclelicense=accept-securebackup-cookie'
+      dest:    "/tmp"
+    delegate_to: 127.0.0.1
+    become: "no"
+    run_once: "yes"
+    when: deploy_mode == True and jdk_rpm.stat.exists == False
+
+  - name: Output jdk rpm path
+    debug:
+      msg: "/tmp/{{ oracle_jdk_rpm_url | basename }}"
+      verbosity: 2
+
+  - name: Copy file to hosts
+    copy:
+      src: "/tmp/{{ oracle_jdk_rpm_url | basename }}"
+      dest: "/home/vagrant"
+    when: deploy_mode
+
+  - name: Install Oracle JVM rpm
+    command: "yum localinstall {{ oracle_jdk_rpm_url | basename }} -y"
+    when: deploy_mode
+    args:
+      chdir: /home/vagrant
+
+  - name: Creare Hard link to java
+    file:
+      src: /usr/java/jdk1.8.0_144/bin/java
+      dest: /usr/bin/java
+      state: link
+
+
+  #- name: Create hardlink to java
+
   - name: Set FQDN
     lineinfile:
       dest: /etc/hostname
@@ -88,6 +143,11 @@
       gpgkey: https://www.apache.org/dist/cassandra/KEYS
       state: present
 
+  - name: Install additional_packages
+    yum:
+      name: "{{ additional_packages }}"
+      state: present
+
   - name: yum-clean-metadata
     command: yum clean metadata
     args:
@@ -98,6 +158,7 @@
       name: "{{ cassandra_packages }}"
       state: present
       update_cache: yes
+    when: deploy_mode
 
   - name: Set Cassandra Cluster name
     lineinfile:
@@ -197,6 +258,12 @@
       state: absent
     with_items: ["/home/vagrant/cassandra_admin_user.cql", "/home/vagrant/cassandra_default_admin_user.cql"]
     when: ansible_hostname == cassandra_admin_node
+
+  - name: Modify cassandra-env.sh
+    lineinfile:
+      path: "/etc/cassandra/default.conf/cassandra-env.sh"
+      regexp: "^    LOCAL_JMX=yes$"
+      line: "    LOCAL_JMX=no"
 
 #- name:
 
