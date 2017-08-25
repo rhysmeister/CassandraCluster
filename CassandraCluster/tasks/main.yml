@@ -259,21 +259,21 @@
     with_items: ["/home/vagrant/cassandra_admin_user.cql", "/home/vagrant/cassandra_default_admin_user.cql"]
     when: ansible_hostname == cassandra_admin_node
 
-  - name: Modify LOCAL_JMX cassandra-env.sh
-    lineinfile:
-      path: "/etc/cassandra/default.conf/cassandra-env.sh"
-      regexp: "^    LOCAL_JMX=yes$"
-      line: "    LOCAL_JMX=no"
+  #- name: Modify LOCAL_JMX cassandra-env.sh
+  #  lineinfile:
+  #    path: "/etc/cassandra/default.conf/cassandra-env.sh"
+  #    regexp: "^    LOCAL_JMX=yes$"
+  #    line: "    LOCAL_JMX=no"
 
-  - name: Modify other JMX Settings
-    lineinfile:
-      path: "/etc/cassandra/default.conf/cassandra-env.sh"
-      regexp: "\\?\\*{{item|regex_escape}}\\?\\*"
-      line: "{{ item }}"
-    with_items:
-      - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=true"'
-      - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.password.file=/etc/cassandra/jmxremote.password"'
-      - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.access.file=/etc/cassandra/jmxremote.access"'
+  #- name: Modify other JMX Settings
+  #  lineinfile:
+  #    path: "/etc/cassandra/default.conf/cassandra-env.sh"
+  #    regexp: "\\?\\*{{item|regex_escape}}\\?\\*"
+  #    line: "{{ item }}"
+  #  with_items:
+  #    - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=true"'
+  #    - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.password.file=/etc/cassandra/jmxremote.password"'
+  #    - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.access.file=/etc/cassandra/jmxremote.access"'
 
 #- name:
 
