@@ -182,7 +182,14 @@
     lineinfile:
       dest: /etc/cassandra/conf/cassandra.yaml
       regexp: '^rpc_address:'
-      line: "rpc_address: 0.0.0.0s"
+      line: "rpc_address:"
+
+  - name: Set Cassandra RPC Broadcast Address
+    lineinfile:
+      dest: /etc/cassandra/conf/cassandra.yaml
+      regexp: \^broadcast_rpc_address:'
+      state: "absent"
+      #line: 'broadcast_rpc_address:'
 
   - name: Set Cassandra authenticator
     lineinfile:
