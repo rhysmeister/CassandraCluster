@@ -176,13 +176,13 @@
     lineinfile:
       dest: /etc/cassandra/conf/cassandra.yaml
       regexp: '^listen_address:'
-      line: "listen_address: {{ ansible_eth1.ipv4.address }}"
+      line: "listen_address: {{ ansible_eth0.ipv4.address }}"
 
   - name: Set Cassandra RPC Address
     lineinfile:
       dest: /etc/cassandra/conf/cassandra.yaml
       regexp: '^rpc_address:'
-      line: "rpc_address: {{ ansible_eth1.ipv4.address }}"
+      line: "rpc_address: 0.0.0.0s"
 
   - name: Set Cassandra authenticator
     lineinfile:
@@ -259,11 +259,21 @@
     with_items: ["/home/vagrant/cassandra_admin_user.cql", "/home/vagrant/cassandra_default_admin_user.cql"]
     when: ansible_hostname == cassandra_admin_node
 
-  - name: Modify cassandra-env.sh
+  - name: Modify LOCAL_JMX cassandra-env.sh
     lineinfile:
       path: "/etc/cassandra/default.conf/cassandra-env.sh"
       regexp: "^    LOCAL_JMX=yes$"
       line: "    LOCAL_JMX=no"
+
+  - name: Modify other JMX Settings
+    lineinfile:
+      path: "/etc/cassandra/default.conf/cassandra-env.sh"
+      regexp: "\\?\\*{{item|regex_escape}}\\?\\*"
+      line: "{{ item }}"
+    with_items:
+      - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=true"'
+      - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.password.file=/etc/cassandra/jmxremote.password"'
+      - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.access.file=/etc/cassandra/jmxremote.access"'
 
 #- name:
 
