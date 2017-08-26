@@ -176,7 +176,7 @@
     lineinfile:
       dest: /etc/cassandra/conf/cassandra.yaml
       regexp: '^listen_address:'
-      line: "listen_address: {{ ansible_eth0.ipv4.address }}"
+      line: "listen_address: {{ ansible_eth1.ipv4.address }}"
 
   - name: Set Cassandra RPC Address
     lineinfile:
