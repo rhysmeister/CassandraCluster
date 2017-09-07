@@ -7,6 +7,7 @@ Vagrant.configure("2") do |config|
         cnode.vm.network "private_network", ip: "192.168.44.#{100 + cluster_node}"
         cnode.vm.hostname = node_name
         cnode.vm.provider :virtualbox do |vbox|
+            vbox.linked_clone = true
             vbox.name = node_name
             vbox.memory = 2048
             vbox.cpus = 1
