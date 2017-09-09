@@ -46,10 +46,10 @@
     when: deploy_mode
 
   - name: Install Oracle JVM rpm
-    command: "yum localinstall {{ oracle_jdk_rpm_url | basename }} -y"
+    yum:
+      name: "{{ oracle_jdk_rpm_url | basename }}"
+      state: "present"
     when: deploy_mode
-    args:
-      chdir: /home/vagrant
 
   - name: Creare Hard link to java
     file:
