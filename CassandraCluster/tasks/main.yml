@@ -51,7 +51,7 @@
       state: "present"
     when: deploy_mode
 
-  - name: Creare Hard link to java
+  - name: Create Hard link to java
     file:
       src: /usr/java/jdk1.8.0_144/bin/java
       dest: /usr/bin/java
@@ -143,7 +143,7 @@
       gpgkey: https://www.apache.org/dist/cassandra/KEYS
       state: present
 
-  - name: Install additional_packages
+  - name: Install additional packages
     yum:
       name: "{{ additional_packages }}"
       state: present
@@ -198,11 +198,21 @@
       line: 'authenticator: PasswordAuthenticator'
     register: authentication_enabled
 
-  - name: Start Cassandra Service
-    service:
-      name: cassandra
-      enabled: yes
-      state: started
+  #- name: Start Cassandra Service
+  #  service:
+  #    name: cassandra
+  #    enabled: yes
+  #    state: started
+
+  # Workaround to get around this issue preventing cnode5 starting...
+  # Other bootstrapping/leaving/moving nodes detected, cannot bootstrap while cassandra.consistent.rangemovement is true
+  - name: Staged Cassandra Service Start
+    # serial: 1 would be the proper solution here, but that can only be set on play level
+    # upstream issue: https://github.com/ansible/ansible/issues/12170
+    run_once: true
+    with_items: "{{ play_hosts }}"
+    delegate_to: "{{ item }}"
+    shell: "sleep 60 && /usr/sbin/service cassandra start"
 
   - name: Pause Ansible execution
     pause:
