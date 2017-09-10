@@ -160,6 +160,19 @@
       update_cache: yes
     when: deploy_mode
 
+  - name: Include vars file for cassandra
+    include_vars:
+      file: "vars/cassandra.yaml"
+
+  - name: Copy template cassandra.yaml
+    template:
+      src: "templates/cassandra.yaml.j2"
+      dest: "/etc/cassandra/conf/cassandra.yaml"
+      owner: "cassandra"
+      group: "cassandra"
+      mode: 0751
+      backup: "yes"
+
   #- name: Start Cassandra Service
   #  service:
   #    name: cassandra
