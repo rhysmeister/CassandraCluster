@@ -160,44 +160,6 @@
       update_cache: yes
     when: deploy_mode
 
-  - name: Set Cassandra Cluster name
-    lineinfile:
-      dest: /etc/cassandra/conf/cassandra.yaml
-      regexp: '^cluster_name:'
-      line: "cluster_name: 'cassandra_cluster'"
-
-  - name: Set Cassandra Seeds
-    lineinfile:
-      dest: /etc/cassandra/conf/cassandra.yaml
-      regexp: '- seeds:'
-      line: "{{ cassandra_seeds }}"
-
-  - name: Set Cassandra Listen Address
-    lineinfile:
-      dest: /etc/cassandra/conf/cassandra.yaml
-      regexp: '^listen_address:'
-      line: "listen_address: {{ ansible_eth1.ipv4.address }}"
-
-  - name: Set Cassandra RPC Address
-    lineinfile:
-      dest: /etc/cassandra/conf/cassandra.yaml
-      regexp: '^rpc_address:'
-      line: "rpc_address:"
-
-  - name: Set Cassandra RPC Broadcast Address
-    lineinfile:
-      dest: /etc/cassandra/conf/cassandra.yaml
-      regexp: \^broadcast_rpc_address:'
-      state: "absent"
-      #line: 'broadcast_rpc_address:'
-
-  - name: Set Cassandra authenticator
-    lineinfile:
-      dest: /etc/cassandra/conf/cassandra.yaml
-      regexp: '^authenticator:'
-      line: 'authenticator: PasswordAuthenticator'
-    register: authentication_enabled
-
   #- name: Start Cassandra Service
   #  service:
   #    name: cassandra
