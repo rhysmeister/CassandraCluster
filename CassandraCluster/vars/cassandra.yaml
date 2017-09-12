@@ -23,3 +23,4 @@ cassandra_configuration:
   client_encryption_options:
       enabled: false
       optional: false
+  incremental_backups: true

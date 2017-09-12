@@ -72,7 +72,7 @@ rpc_port: 9160
 rpc_keepalive: true
 rpc_server_type: sync
 thrift_framed_transport_size_in_mb: 15
-incremental_backups: false
+incremental_backups: "{{ cassandra_configuration.incremental_backups }}"
 snapshot_before_compaction: false
 auto_snapshot: true
 column_index_size_in_kb: 64
