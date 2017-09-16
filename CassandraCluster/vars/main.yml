@@ -9,7 +9,10 @@
     "cassandra - as unlimited" ]
   cassandra_admin_node: "cnode1" # Where we perform Cassandra CLuster admin tasks
   ntp_packages: ["ntp", "ntpdate", "ntp-doc"]
-  cassandra_packages: [ "cassandra", "cassandra-tools", "python2-cassandra-driver" ]
+  cassandra_packages: [ "cassandra", "cassandra-tools", "python2-cassandra-driver"]
   additional_packages: ["jemalloc", "net-tools"]
   oracle_jdk_rpm_url: "http://download.oracle.com/otn-pub/java/jdk/8u144-b01/090f390dda5b47b9b721c7dfaa008135/jdk-8u144-linux-x64.rpm"
   deploy_mode: True
+  cdm_url: "https://github.com/riptano/cdm-java/releases/download/0.11/cdm"
+  cdm_datasets: ["movielens", "killrvideo", "killrweather"]
+  cassandra_replication_factor: 3

@@ -57,9 +57,6 @@
       dest: /usr/bin/java
       state: link
 
-
-  #- name: Create hardlink to java
-
   - name: Set FQDN
     lineinfile:
       dest: /etc/hostname
@@ -188,10 +185,49 @@
     with_items: "{{ play_hosts }}"
     delegate_to: "{{ item }}"
     shell: "sleep 60 && /usr/sbin/service cassandra start"
+    when: deploy_mode == True
 
-  - name: Pause Ansible execution
+  - name: Download cdm to cassandra_admin_node
+    get_url:
+      url: "{{ cdm_url }}"
+      dest: /usr/bin
+    when: ansible_hostname == cassandra_admin_node and deploy_mode == True
+
+  - name: cdm permissions
+    file:
+      path: "/usr/bin/cdm"
+      mode: "0755"
+    when: ansible_hostname == cassandra_admin_node
+
+  - name: Install cdm datasets
+    command: "cdm install {{ item }} --rf {{ cassandra_replication_factor }} --host {{ ansible_hostname }} "
+    with_items: "{{ cdm_datasets }}"
+    when: ansible_hostname == cassandra_admin_node and deploy_mode == True
+    become: "no"
+
+  - name: Remove commented out authenticator var in cassandra.yaml
+    lineinfile:
+      path: "/etc/cassandra/conf/cassandra.yaml"
+      regexp: "^#authenticator: \"{{ cassandra_configuration.authenticator }}\""
+      line: "authenticator: {{ cassandra_configuration.authenticator }}"
+
+  - name: Remove commented out auth vars in cassandra.yaml
+    lineinfile:
+      path: "/etc/cassandra/conf/cassandra.yaml"
+      regexp: "^#authorizer: \"{{ cassandra_configuration.authorizer }}\""
+      line: "authorizer: {{ cassandra_configuration.authorizer }}"
+    register: cassandra_restarted_needed
+
+  - name: Restart cassandra service
+    service:
+      name: "cassandra"
+      state: "restarted"
+    when: cassandra_restarted_needed.changed == True
+
+  - name: Wait a little
     pause:
       minutes: 1
+    when: cassandra_restarted_needed.changed == True
 
   - name: Check if anon access is enabled
     command: cqlsh
@@ -239,6 +275,26 @@
     environment:
       CQLSH_HOST: "{{ ansible_eth1.ipv4.address }}"
     when: ansible_hostname == cassandra_admin_node and default_admin_access_possible.rc == 0
+
+  - name: Create /home/vagrant/.cassandra directory
+    file:
+      path: "/home/vagrant/.cassandra"
+      state: "directory"
+    become: "no"
+
+  - name: Create .cassandra/cqlshrc file
+    copy:
+      content: |
+        [authentication]
+        username = {{ cassandra_admin_user }}
+        password = {{ cassandra_admin_user_pwd }}
+
+        [connection]
+        hostname = {{ ansible_hostname }}
+        port = 9042
+      dest: "/home/vagrant/.cassandra/cqlshrc"
+      mode: "0700"
+    become: "no"
 
   - debug:
       var: ansible_eth1.ipv4.address
