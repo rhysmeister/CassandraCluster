@@ -9,7 +9,7 @@ Vagrant.configure("2") do |config|
         cnode.vm.provider :virtualbox do |vbox|
             vbox.linked_clone = true
             vbox.name = node_name
-            vbox.memory = 2048
+            vbox.memory = 2560
             vbox.cpus = 1
         end
         cnode.vm.synced_folder '.', '/vagrant', disabled: true
