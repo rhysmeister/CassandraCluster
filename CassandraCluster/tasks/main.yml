@@ -222,6 +222,7 @@
     service:
       name: "cassandra"
       state: "restarted"
+      enabled: "yes"
     when: cassandra_restarted_needed.changed == True
 
   - name: Wait a little
