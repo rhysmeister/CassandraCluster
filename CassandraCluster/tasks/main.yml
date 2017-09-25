@@ -170,6 +170,13 @@
       mode: 0751
       backup: "yes"
 
+  - name: Ensure data folder owner is correct
+    file:
+      path: /var/lib/cassandra/
+      state: directory
+      owner: cassandra
+      group: cassandra
+
   #- name: Start Cassandra Service
   #  service:
   #    name: cassandra
