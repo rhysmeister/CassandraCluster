@@ -10,12 +10,6 @@
       name: "java*openjdk*"
       state: "absent"
 
-  #- name: Get Latest Oracle JDK
-  #  shell: "wget --no-cookies --no-check-certificate --header Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie {{ oracle_jdk_rpm_url }}"
-    #delegate_to: 127.0.0.1
-    #run_once: "yes"
-    #register: jdk_downloaded
-
   - name: Check if Oracle JDK rpm has already been downloaded
     stat:
       path: "/tmp/{{ oracle_jdk_rpm_url | basename }}"
@@ -177,12 +171,6 @@
       owner: cassandra
       group: cassandra
 
-  #- name: Start Cassandra Service
-  #  service:
-  #    name: cassandra
-  #    enabled: yes
-  #    state: started
-
   # Workaround to get around this issue preventing cnode5 starting...
   # Other bootstrapping/leaving/moving nodes detected, cannot bootstrap while cassandra.consistent.rangemovement is true
   - name: Staged Cassandra Service Start
@@ -314,33 +302,3 @@
       state: absent
     with_items: ["/home/vagrant/cassandra_admin_user.cql", "/home/vagrant/cassandra_default_admin_user.cql"]
     when: ansible_hostname == cassandra_admin_node
-
-  #- name: Modify LOCAL_JMX cassandra-env.sh
-  #  lineinfile:
-  #    path: "/etc/cassandra/default.conf/cassandra-env.sh"
-  #    regexp: "^    LOCAL_JMX=yes$"
-  #    line: "    LOCAL_JMX=no"
-
-  #- name: Modify other JMX Settings
-  #  lineinfile:
-  #    path: "/etc/cassandra/default.conf/cassandra-env.sh"
-  #    regexp: "\\?\\*{{item|regex_escape}}\\?\\*"
-  #    line: "{{ item }}"
-  #  with_items:
-  #    - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.authenticate=true"'
-  #    - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.password.file=/etc/cassandra/jmxremote.password"'
-  #    - 'JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.access.file=/etc/cassandra/jmxremote.access"'
-
-#- name:
-
-#  - name: Execute Cassandra Authentication Script on the hosts
-#    command: "/home/vagrant/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}"
-#    args:
-#      creates: /home/vagrant/ansible_cassandra_admin_user_ran_here.txt
-#    when: ansible_hostname == 'cnode1'
-
-#      - name: Run Casandra Authentication Setup Script
-#        script: bash/cassandra_auth.sh {{ cassandra_admin_user }} {{ cassandra_admin_user_pwd }}
-#        args:
-#            creates: ansible_cassandra_admin_user_ran_here.txt
-#        when: ansible_hostname == 'cnode1'
