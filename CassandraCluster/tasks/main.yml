@@ -166,7 +166,7 @@
 
   - name: Ensure data folder owner is correct
     file:
-      path: /var/lib/cassandra/
+      path: [ "/var/lib/cassandra/", "/backup/" ]
       state: directory
       owner: cassandra
       group: cassandra
