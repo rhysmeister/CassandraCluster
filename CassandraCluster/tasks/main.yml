@@ -199,6 +199,7 @@
     with_items: "{{ cdm_datasets }}"
     when: ansible_hostname == cassandra_admin_node and deploy_mode == True
     become: "no"
+    creates: /var/lib/cassandra/data/killrvideo
 
   - name: Remove commented out authenticator var in cassandra.yaml
     lineinfile:
