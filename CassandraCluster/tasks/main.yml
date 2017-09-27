@@ -166,10 +166,13 @@
 
   - name: Ensure data folder owner is correct
     file:
-      path: [ "/var/lib/cassandra/", "/backup/" ]
+      path: "{{ item }}"
       state: directory
       owner: cassandra
       group: cassandra
+    with_items:
+      - "/var/lib/cassandra/"
+      - "/backup/"
 
   # Workaround to get around this issue preventing cnode5 starting...
   # Other bootstrapping/leaving/moving nodes detected, cannot bootstrap while cassandra.consistent.rangemovement is true
@@ -196,10 +199,12 @@
 
   - name: Install cdm datasets
     command: "cdm install {{ item }} --rf {{ cassandra_replication_factor }} --host {{ ansible_hostname }} "
+    args:
+      creates: /var/lib/cassandra/data/killrvideo
     with_items: "{{ cdm_datasets }}"
     when: ansible_hostname == cassandra_admin_node and deploy_mode == True
     become: "no"
-    creates: /var/lib/cassandra/data/killrvideo
+
 
   - name: Remove commented out authenticator var in cassandra.yaml
     lineinfile:
