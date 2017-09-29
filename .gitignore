@@ -1,2 +1,9 @@
 .vagrant/*
 cassandra.retry
+cassandra_nodes.txt
+cassandra_backup.stderr/*
+cassandra_backup.stdout/*
+cassandra_data_dir_clear.stderr/*
+cassandra_data_dir_clear.stdout/*
+cassandra_service_stop.stderr/*
+cassandra_service_stop.stdout/*
