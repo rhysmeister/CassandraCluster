@@ -1,10 +1,5 @@
 ---
 # tasks file for CassandraCluster
-  - name: Output a debug message
-    debug:
-      msg: "Anisble debug task is excuted!"
-      verbosity: 1
-
   - name: Ensure OpenJDK is not installed
     yum:
       name: "java*openjdk*"
@@ -119,11 +114,6 @@
       regexp: "^\\* - nproc 32768"
       line: "* - nproc 32768"
       create: yes
-
-  # Use ansible facts instead ansible_eth1.ipv4.address
-  #- name: Get IP Address
-  #  shell: "ip --4 address show eth1 | grep inet | awk '{ print $2; }' | cut -d '/' -f 1"
-  #  register: ip_address
 
   - name: Add Cassandra Repository
     yum_repository:
@@ -297,10 +287,6 @@
       dest: "/home/vagrant/.cassandra/cqlshrc"
       mode: "0700"
     become: "no"
-
-  - debug:
-      var: ansible_eth1.ipv4.address
-      verbosity: 2
 
   - name: Remove CQL files if needed
     file:
