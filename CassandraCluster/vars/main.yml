@@ -16,3 +16,5 @@
   cdm_url: "https://github.com/riptano/cdm-java/releases/download/0.11/cdm"
   cdm_datasets: ["movielens", "killrvideo", "killrweather"]
   cassandra_replication_factor: 3
+  cassandra_yum_repo_url: "https://www.apache.org/dist/cassandra/redhat/311x/"
+  cassandra_yum_repo_gpgkey_url: "https://www.apache.org/dist/cassandra/KEYS"
