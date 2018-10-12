@@ -42,7 +42,7 @@
 
   - name: Create Hard link to java
     file:
-      src: /usr/java/jdk1.8.0_144/bin/java
+      src: /usr/java/jdk1.8.0_181-amd64/bin/java
       dest: /usr/bin/java
       state: link
 

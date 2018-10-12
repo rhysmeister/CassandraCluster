@@ -3,3 +3,7 @@
     gather_facts: yes
     become: yes
     roles: [ "CassandraCluster" ]
+
+    environment:
+      http_proxy: http://proxy.corproot.net:8079
+      https_proxy: http://proxy.corproot.net:8079
