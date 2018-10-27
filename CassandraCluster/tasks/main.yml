@@ -6,19 +6,14 @@
       state: "absent"
 
   - name: Check if Oracle JDK rpm has already been downloaded
-    stat:
-      path: "/tmp/{{ oracle_jdk_rpm_url | basename }}"
-    delegate_to: 127.0.0.1
+    local_action: stat path="/tmp/{{ oracle_jdk_rpm_url | basename }}"
     run_once: "yes"
     become: "no"
     register: jdk_rpm
 
   - name: Get Oracle JDK rpm
-    get_url:
-      url:     "{{ oracle_jdk_rpm_url }}"
-      headers: 'Cookie:oraclelicense=accept-securebackup-cookie'
-      dest:    "/tmp"
-    delegate_to: 127.0.0.1
+    #local_action: get_url url="{{ oracle_jdk_rpm_url }}" headers='Cookie:oraclelicense=accept-securebackup-cookie' dest="/tmp"
+    local_action: shell wget --no-check-certificate -c {{ oracle_jdk_rpm_url }} --header 'Cookie:oraclelicense=accept-securebackup-cookie' --directory-prefix=/tmp
     become: "no"
     run_once: "yes"
     when: deploy_mode == True and jdk_rpm.stat.exists == False
