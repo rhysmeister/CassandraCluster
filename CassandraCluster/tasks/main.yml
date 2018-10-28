@@ -12,8 +12,8 @@
     register: jdk_rpm
 
   - name: Get Oracle JDK rpm
-    #local_action: get_url url="{{ oracle_jdk_rpm_url }}" headers='Cookie:oraclelicense=accept-securebackup-cookie' dest="/tmp"
-    local_action: shell wget --no-check-certificate -c {{ oracle_jdk_rpm_url }} --header 'Cookie:oraclelicense=accept-securebackup-cookie' --directory-prefix=/tmp
+    local_action: get_url url="{{ oracle_jdk_rpm_url }}" headers='Cookie:oraclelicense=accept-securebackup-cookie' dest="/tmp"
+    #local_action: shell wget --no-check-certificate -c {{ oracle_jdk_rpm_url }} --header 'Cookie:oraclelicense=accept-securebackup-cookie' --directory-prefix=/tmp
     become: "no"
     run_once: "yes"
     when: deploy_mode == True and jdk_rpm.stat.exists == False
