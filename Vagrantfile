@@ -1,5 +1,5 @@
 Vagrant.configure("2") do |config|
-  HOSTS=5
+  HOSTS=12
   (1..HOSTS).each do |cluster_node|
     node_name = "cnode#{cluster_node}"
     config.vm.define node_name do |cnode|
