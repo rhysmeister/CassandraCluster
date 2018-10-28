@@ -1,11 +1,14 @@
 Vagrant.configure("2") do |config|
+
+  if Vagrant.has_plugin?("vagrant-proxyconf")
+    config.proxy.http     = ""
+    config.proxy.https    = ""
+  end
+
   HOSTS=12
   (1..HOSTS).each do |cluster_node|
     node_name = "cnode#{cluster_node}"
-    if Vagrant.has_plugin?("vagrant-proxyconf")
-      config.proxy.http     = ""
-      config.proxy.https    = ""
-    end
+
     config.vm.define node_name do |cnode|
         cnode.vm.box = "centos/7"
         cnode.vm.network "private_network", ip: "192.168.44.#{100 + cluster_node}"
