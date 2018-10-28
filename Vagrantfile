@@ -3,6 +3,8 @@ Vagrant.configure("2") do |config|
   if Vagrant.has_plugin?("vagrant-proxyconf")
     config.proxy.http     = ""
     config.proxy.https    = ""
+    config.proxy.no_proxy = "*"
+    config.yum_proxy.http = false
   end
 
   HOSTS=12
